@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fairy Flip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            gap: 10px;
+            justify-content: center;
+            margin-top: 50px;
+        }
+        .card {
+            width: 100px;
+            height: 100px;
+            cursor: pointer;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+        }
+        .hidden {
+            background-image: url('card_back.png'); /* Replace with your card back image */
+        }
+        .revealed {
+            background-color: #fff;
+        }
+        .win-message {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #4caf50;
+        }
+        .win-message h1 {
+            color: pink;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fairy Flip</h1>
+    <div id="game" class="game-container"></div>
+    <div id="winMessage" class="win-message"></div>
+
+    <script>
+        const gridSize = 4;
+        const numPairs = (gridSize * gridSize) / 2;
+        const cardImages = [];
+        for (let i = 1; i <= numPairs; i++) {
+            cardImages.push(`card_${i}.png`); // Replace with actual image paths
+        }
+
+        const cards = [...cardImages, ...cardImages];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let startTime;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createGameBoard() {
+            const gameContainer = document.getElementById('game');
+            shuffle(cards);
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card', 'hidden');
+                cardElement.dataset.index = index;
+                cardElement.addEventListener('click', () => flipCard(cardElement));
+                gameContainer.appendChild(cardElement);
+            });
+            startTime = new Date().getTime();
+        }
+
+        function flipCard(cardElement) {
+            if (flippedCards.length >= 2 || cardElement.classList.contains('revealed')) {
+                return;
+            }
+
+            const cardIndex = cardElement.dataset.index;
+            cardElement.style.backgroundImage = `url('${cards[cardIndex]}')`;
+            cardElement.classList.remove('hidden');
+            cardElement.classList.add('revealed');
+            flippedCards.push(cardElement);
+
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const index1 = card1.dataset.index;
+            const index2 = card2.dataset.index;
+
+            if (cards[index1] === cards[index2]) {
+                matchedPairs++;
+                card1.style.pointerEvents = 'none';
+                card2.style.pointerEvents = 'none';
+            } else {
+                card1.style.backgroundImage = "url('card_back.png')"; // Replace with card back image
+                card2.style.backgroundImage = "url('card_back.png')";
+                card1.classList.remove('revealed');
+                card2.classList.remove('revealed');
+                card1.classList.add('hidden');
+                card2.classList.add('hidden');
+            }
+
+            flippedCards = [];
+
+            if (matchedPairs === numPairs) {
+                gameWon();
+            }
+        }
+
+        function gameWon() {
+            const elapsedTime = (new Date().getTime() - startTime) / 1000;
+            const winMessage = document.getElementById('winMessage');
+            winMessage.innerHTML = `<h1>You won in ${elapsedTime.toFixed(2)} seconds!</h1>`;
+        }
+
+        createGameBoard();
+    </script>
+</body>
+</html>
